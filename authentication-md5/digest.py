@@ -1,12 +1,8 @@
 import hashlib
 
-# Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="89df19959b080fe8cc592d03fb9e476d", uri="rtsp://192.168.1.108:554", response="0ed422346297a1a4862ffa8eb9c28111"
-# Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="89df19959b080fe8cc592d03fb9e476d", uri="rtsp://192.168.1.108:554/", response="4cb4da176e825d0317f6d4c479db1aa2"
-# Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="89df19959b080fe8cc592d03fb9e476d", uri="rtsp://192.168.1.108:554", response="3f2244ce1396861a83cbbaf92f766dc8"
-
 # CRACKING A RTSP SESSION
 #
-# Get the 'Authorization' header of a RTSP packet like the ones illustrated above.
+# Get the 'Authorization' header of a RTSP packet like the ones at the bottom of this script.
 # Also make sure to record the method (e.g. OPTIONS, DESCRIBE, SETUP, PLAY, etc.)
 #
 # Next, run the generate_target function in this script with the header's values
@@ -46,6 +42,8 @@ def generate_target(username, realm, method, uri, nonce, hash):
     file.writelines(format)
     file.close()
 
+# SETUP Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="cf2b0424d061a766894102f06ec0b0a7", uri="rtsp://192.168.1.108:554/", response="a77a5ac69d67e65c91c3bbb796e629a3"
 
-generate_target("admin", "Login to 4H01D66PAJ2FA64", "DESCRIBE", "rtsp://192.168.1.108:554",
-                "89df19959b080fe8cc592d03fb9e476d", "3f2244ce1396861a83cbbaf92f766dc8")
+
+generate_target("admin", "Login to 4H01D66PAJ2FA64", "SETUP", "rtsp://192.168.1.108:554/",
+                "cf2b0424d061a766894102f06ec0b0a7", "a77a5ac69d67e65c91c3bbb796e629a3")
