@@ -42,8 +42,10 @@ def generate_target(username, realm, method, uri, nonce, hash):
     file.writelines(format)
     file.close()
 
-# SETUP Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="cf2b0424d061a766894102f06ec0b0a7", uri="rtsp://192.168.1.108:554/", response="a77a5ac69d67e65c91c3bbb796e629a3"
 
+# Example authorization header from an 'OPTIONS' RTSP request:
+# Authorization: Digest username="admin", realm="Login to 4H01D66PAJ2FA64", nonce="ca3a440596cc3a91f9e325547e3a208e", uri="rtsp://192.168.1.108:554", response="41ebde6e61f0fc2aa0bd0b157c4465de"
+# digest_hash("admin", "Login to 4H01D66PAJ2FA64", "SecretPassword", "OPTIONS", "rtsp://192.168.1.108:554", "ca3a440596cc3a91f9e325547e3a208e") == 41ebde6e61f0fc2aa0bd0b157c4465de
 
-generate_target("admin", "Login to 4H01D66PAJ2FA64", "SETUP", "rtsp://192.168.1.108:554/",
-                "cf2b0424d061a766894102f06ec0b0a7", "a77a5ac69d67e65c91c3bbb796e629a3")
+generate_target("admin", "Login to 4H01D66PAJ2FA64", "OPTIONS", "rtsp://192.168.1.108:554",
+                "ca3a440596cc3a91f9e325547e3a208e", "41ebde6e61f0fc2aa0bd0b157c4465de")
