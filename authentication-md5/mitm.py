@@ -1,7 +1,8 @@
 # Scapy ARP poisoning to intercept RTSP packets
 
 from threading import Thread
-from scapy.all import Ether, ARP, getmacbyip, conf, get_if_addr, get_if_hwaddr, sendp, sniff
+from scapy.all import conf, get_if_addr, get_if_hwaddr, sendp, sniff
+from scapy.layers.l2 import Ether, ARP, getmacbyip
 import sys
 
 
