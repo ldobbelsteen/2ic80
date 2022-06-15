@@ -1,5 +1,6 @@
 from scapy.layers.l2 import getmacbyip, get_if_addr, get_if_hwaddr, sendp, Ether, ARP
-from scapy.all import sniff, conf, TCP
+from scapy.layers.inet import TCP
+from scapy.all import sniff, conf
 from threading import Thread
 import hashlib
 import sys
