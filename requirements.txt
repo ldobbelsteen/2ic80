@@ -1,1 +1,1 @@
-scapy.all
+scapy

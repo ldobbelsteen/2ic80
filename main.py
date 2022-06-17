@@ -9,7 +9,7 @@ import sys
 def arp_poison(iface, iface_mac, target_ip, target_mac, source_ip):
     """
     Poison the ARP tables of a target with the MAC of the device running
-    this script and a target_ip. It uses the specified network interface
+    this script and a target IP. It uses the specified network interface
     and its MAC and sends an ARP packet every second to the target to
     trick it into thinking this device's IP is the source IP.
     """
