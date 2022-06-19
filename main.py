@@ -1,4 +1,3 @@
-from ast import arg
 from multiprocessing import Manager, Process
 from scapy.layers.l2 import getmacbyip, get_if_addr, get_if_hwaddr, sendp, Ether, ARP
 from scapy.layers.inet import TCP
