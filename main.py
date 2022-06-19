@@ -61,6 +61,16 @@ def dahua_rtsp_hash(username, realm, password, method, uri, nonce):
     return response.hexdigest()
 
 
+def dahua_web_hash(username, realm, password, random):
+    ha1_str = username + ":" + realm + ":" + password
+    ha1 = hashlib.md5(ha1_str.encode())
+
+    response_str = username + ":" + random + ":" + ha1.hexdigest().upper()
+    response = hashlib.md5(response_str.encode())
+
+    return response.hexdigest()
+
+
 def sniff_rtsp_authorization(source_ip, target_ip, output):
     """
     Sniff packets coming through the device running the script. It filters out
